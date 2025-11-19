@@ -1,0 +1,39 @@
+# Python dependencies for AMASC01
+
+# Core dependencies
+numpy>=1.19.0
+pyyaml>=5.3.0
+
+# Astronomy and image processing
+astropy>=4.0.0
+opencv-python>=4.2.0
+
+# Optional dependencies for advanced features
+# Uncomment as needed:
+
+# For FITS file handling (already included in astropy)
+# astropy-helpers>=4.0.0
+
+# For web interface
+# flask>=2.0.0
+# flask-cors>=3.0.0
+
+# For plotting and visualization
+# matplotlib>=3.2.0
+# pillow>=8.0.0
+
+# For astronomical calculations
+# ephem>=3.7.0
+# astroplan>=0.7.0
+
+# For database support
+# sqlalchemy>=1.4.0
+
+# For testing
+# pytest>=6.0.0
+# pytest-cov>=2.10.0
+
+# For development
+# black>=20.8b1
+# flake8>=3.8.0
+# mypy>=0.790
