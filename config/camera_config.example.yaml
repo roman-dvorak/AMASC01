@@ -1,0 +1,152 @@
+# Example configuration for AMASC01 AllSky Camera
+# Copy this file to camera_config.yaml and adjust values as needed
+
+# Camera settings
+camera:
+  # Exposure time in seconds
+  exposure: 10.0
+  
+  # Gain/ISO (0-100)
+  gain: 50
+  
+  # Image resolution
+  resolution:
+    width: 1920
+    height: 1080
+  
+  # Output format: fits, jpg, png
+  format: "fits"
+  
+  # Cooling settings (if supported)
+  cooling:
+    enabled: false
+    target_temperature: -10  # Celsius
+
+# Storage settings
+storage:
+  # Output directory for captured images
+  output_path: "/var/amasc01/images"
+  
+  # Filename pattern using strftime format
+  # %Y=year, %m=month, %d=day, %H=hour, %M=minute, %S=second
+  filename_pattern: "amasc01_%Y%m%d_%H%M%S"
+  
+  # Organize files in subdirectories by date
+  organize_by_date: true
+  date_format: "%Y/%m/%d"
+  
+  # Automatic cleanup of old files
+  cleanup:
+    enabled: false
+    keep_days: 30
+
+# Automatic capture settings
+capture:
+  # Enable automatic capture
+  auto_capture: true
+  
+  # Interval between captures (seconds)
+  interval: 60
+  
+  # Only capture during night
+  night_only: true
+  
+  # Sun altitude threshold for night (degrees)
+  # Typical values: -6 (civil twilight), -12 (nautical), -18 (astronomical)
+  sun_altitude_threshold: -6
+  
+  # Geographic location for twilight calculation
+  location:
+    latitude: 50.0755     # Prague, Czech Republic
+    longitude: 14.4378
+    elevation: 200        # meters above sea level
+
+# Image processing
+processing:
+  # Dark frame subtraction
+  subtract_dark: false
+  dark_frame_path: "/var/amasc01/calibration/dark.fits"
+  
+  # Flat field correction
+  flat_field: false
+  flat_frame_path: "/var/amasc01/calibration/flat.fits"
+  
+  # Automatic contrast stretching
+  auto_stretch: true
+  
+  # Image rotation (degrees)
+  rotation: 0
+  
+  # Flip image
+  flip:
+    horizontal: false
+    vertical: false
+
+# Network and web interface
+network:
+  # Enable web interface
+  web_interface: true
+  host: "0.0.0.0"
+  port: 8080
+  
+  # Enable remote access (requires proper firewall configuration)
+  remote_access: false
+  
+  # Authentication
+  auth:
+    enabled: false
+    username: "admin"
+    password: "changeme"
+  
+  # Upload to remote server
+  upload:
+    enabled: false
+    protocol: "ftp"  # ftp, sftp, http
+    server: "ftp.example.com"
+    port: 21
+    username: "user"
+    password: "password"
+    remote_path: "/allsky"
+    upload_interval: 300  # seconds
+
+# Overlays and annotations
+overlay:
+  # Add timestamp to images
+  timestamp: true
+  timestamp_position: "bottom_left"  # top_left, top_right, bottom_left, bottom_right
+  
+  # Add location information
+  location_info: true
+  
+  # Add camera information
+  camera_info: true
+  
+  # Custom text overlay
+  custom_text: "AMASC01 AllSky Camera"
+  custom_text_position: "top_right"
+
+# Logging
+logging:
+  level: "INFO"  # DEBUG, INFO, WARNING, ERROR
+  log_file: "/var/log/amasc01/camera.log"
+  rotate:
+    enabled: true
+    max_size: 10  # MB
+    backup_count: 5
+
+# Advanced settings
+advanced:
+  # Camera timeout (seconds)
+  timeout: 30
+  
+  # Retry attempts on error
+  retry_attempts: 3
+  retry_delay: 5
+  
+  # Temperature monitoring
+  temperature_monitoring: true
+  temperature_alert_threshold: 45  # Celsius
+  
+  # Resource limits
+  max_memory: 2048  # MB
+  max_cpu_percent: 80
