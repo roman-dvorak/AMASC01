@@ -1,0 +1,39 @@
+# Global Python ignores
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+*.so
+*.egg
+*.egg-info/
+.dist-info/
+
+# Virtual environments
+.venv/
+venv/
+env/
+
+# Build / dist
+build/
+dist/
+*.log
+
+# Editor / IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Coverage / tooling
+.coverage
+.coverage.*
+htmlcov/
+.mypy_cache/
+.pytest_cache/
+
+# OS / misc
+.DS_Store
+Thumbs.db
+
+# Project-specific
+/home/astrometers/repos/AMASC01/src/camera_supervisor/__pycache__/

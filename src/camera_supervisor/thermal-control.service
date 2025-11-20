@@ -1,0 +1,35 @@
+[Unit]
+Description=AllSky Camera Thermal Control System
+After=network.target
+Wants=network.target
+
+[Service]
+Type=simple
+User=root
+WorkingDirectory=/home/astrometers/repos/AMASC01/src/camera_supervisor
+RuntimeDirectory=thermal-control
+
+# Environment variables
+Environment="TARGET_TEMP=40"
+Environment="COOLING_MIN=30"
+Environment="COOLING_MAX=70"
+Environment="CPU_FAN_GPIO=518"
+Environment="CPU_FAN_THRESHOLD=35"
+
+ExecStart=/usr/bin/python3 /home/astrometers/repos/AMASC01/src/camera_supervisor/thermal_control.py
+
+Restart=always
+RestartSec=10
+StandardOutput=journal
+StandardError=journal
+
+# Security settings
+NoNewPrivileges=false
+PrivateTmp=true
+
+# Restart policy
+StartLimitInterval=200
+StartLimitBurst=5
+
+[Install]
+WantedBy=multi-user.target
