@@ -12,7 +12,7 @@ import os
 
 from thermal import (
     ThermalController, SocketServer,
-    TARGET_TEMP, COOLING_TEMP_MIN, COOLING_TEMP_MAX, CPU_FAN_THRESHOLD
+    TARGET_TEMP, COOLING_TEMP_MIN, COOLING_TEMP_MAX, CPU_FAN_THRESHOLD, BODY_FAN_THRESHOLD
 )
 
 # Logging setup
@@ -78,6 +78,14 @@ def parse_arguments():
         default=float(os.getenv('CPU_FAN_THRESHOLD', CPU_FAN_THRESHOLD)),
         metavar='TEMP',
         help=f'Temperature threshold to turn on CPU fan (default: {CPU_FAN_THRESHOLD}°C)'
+    )
+
+    parser.add_argument(
+        '--body-fan-threshold',
+        type=float,
+        default=float(os.getenv('BODY_FAN_THRESHOLD', BODY_FAN_THRESHOLD)),
+        metavar='TEMP',
+        help=f'Body temperature threshold to turn on CPU fan (default: {BODY_FAN_THRESHOLD}°C)'
     )
     
     parser.add_argument(
@@ -167,11 +175,12 @@ def main():
     if args.cpu_fan_gpio:
         logger.info(f"CPU fan: GPIO{args.cpu_fan_gpio} (threshold: {args.cpu_fan_threshold}°C)")
     
-    logger.warning(f"START: target={config.TARGET_TEMP}°C cooling={config.COOLING_TEMP_MIN}-{config.COOLING_TEMP_MAX}°C cpu_fan_gpio={args.cpu_fan_gpio} threshold={args.cpu_fan_threshold}°C")
+    logger.warning(f"START: target={config.TARGET_TEMP}°C cooling={config.COOLING_TEMP_MIN}-{config.COOLING_TEMP_MAX}°C cpu_fan_gpio={args.cpu_fan_gpio} cpu_threshold={args.cpu_fan_threshold}°C body_threshold={args.body_fan_threshold}°C")
     
     controller = ThermalController(
         cpu_fan_gpio=args.cpu_fan_gpio,
-        cpu_fan_threshold=args.cpu_fan_threshold
+        cpu_fan_threshold=args.cpu_fan_threshold,
+        body_fan_threshold=args.body_fan_threshold
     )
     
     # Update controller's runtime config to match global config

@@ -61,29 +61,50 @@ def cmd_status(args):
             return "N/A"
         return str(value)
 
-    print("=== Thermal Control System Status ===")
-    print(f"DOME Temperature:  {fmt(status.get('dome_temp'))}°C")
-    print(f"DOME Humidity:     {fmt(status.get('dome_humidity'))}%")
-    print(f"DOME Dew Point:    {fmt(status.get('dome_dew_point'))}°C")
-    print(f"BODY Temperature:  {fmt(status.get('body_temp'))}°C")
-    print(f"BODY Humidity:     {fmt(status.get('body_humidity'))}%")
-    print(f"BODY Dew Point:    {fmt(status.get('body_dew_point'))}°C")
-    print(f"BODY Pressure:     {fmt(status.get('body_pressure'))} hPa")
-    print(f"ENVI Temperature:  {fmt(status.get('envi_temp'))}°C")
-    print(f"ENVI Humidity:     {fmt(status.get('envi_humidity'))}%")
-    print(f"ENVI Dew Point:    {fmt(status.get('envi_dew_point'))}°C")
-    print(f"Heater PWM:         {status.get('heater_pwm', 0):.1f}%")
-    print(f"Fan PWM:            {status.get('fan_pwm', 0):.1f}%")
-    print(f"CPU Fan:            {'ON' if status.get('cpu_fan_state') else 'OFF'}")
-    print(f"\nTarget Temperature: {fmt(status.get('target_temp'))}°C")
-    print(f"Cooling Range:      {fmt(status.get('cooling_min'))}°C - {fmt(status.get('cooling_max'))}°C")
-
+    print("=" * 60)
+    print("  Thermal Control System Status")
+    print("=" * 60)
+    
+    # DOME Section
+    print("\n[DOME - Camera Dome with Heater]")
+    print(f"  Temperature:    {fmt(status.get('dome_temp'))}°C")
+    print(f"  Humidity:       {fmt(status.get('dome_humidity'))}%")
+    print(f"  Dew Point:      {fmt(status.get('dome_dew_point'))}°C")
+    print(f"  Heater PWM:     {status.get('heater_pwm', 0):.1f}%")
+    
+    # BODY Section
+    print("\n[BODY - Camera Body with Fan]")
+    print(f"  Temperature:    {fmt(status.get('body_temp'))}°C")
+    print(f"  Humidity:       {fmt(status.get('body_humidity'))}%")
+    print(f"  Dew Point:      {fmt(status.get('body_dew_point'))}°C")
+    print(f"  Pressure:       {fmt(status.get('body_pressure'))} hPa")
+    print(f"  Cooling Fan:    {status.get('fan_pwm', 0):.1f}%", end="")
     if status.get('fan_override') is not None:
-        print(f"Fan Override:       {fmt(status['fan_override'])}% (MANUAL MODE)")
+        print(f" (MANUAL: {fmt(status['fan_override'])}%)")
     else:
-        print(f"Fan Mode:           AUTO")
+        print(" (AUTO)")
+    
+    # CPU Section
+    print("\n[CPU - Compute Module]")
+    print(f"  Temperature:    {fmt(status.get('cpu_temp'))}°C")
+    print(f"  CPU Fan:        {'ON' if status.get('cpu_fan_state') else 'OFF'}")
+    
+    # ENVI Section
+    print("\n[ENVI - Environment Sensor]")
+    print(f"  Temperature:    {fmt(status.get('envi_temp'))}°C")
+    print(f"  Humidity:       {fmt(status.get('envi_humidity'))}%")
+    print(f"  Dew Point:      {fmt(status.get('envi_dew_point'))}°C")
+    
+    # Control Parameters
+    print("\n[Control Parameters]")
+    print(f"  Target Temp:    {fmt(status.get('target_temp'))}°C (DOME)")
+    print(f"  Cooling Range:  {fmt(status.get('cooling_min'))}°C - {fmt(status.get('cooling_max'))}°C (BODY)")
+    print(f"  CPU Fan Thresh: {fmt(status.get('cpu_fan_threshold'))}°C")
+    print(f"  Body Fan Thresh:{fmt(status.get('body_fan_threshold'))}°C")
+    print(f"  Error Count:    {status.get('error_count', 0)}")
+    
+    print("=" * 60)
 
-    print(f"Error Count:        {status.get('error_count', 0)}")
 
 
 def cmd_set_target(args):

@@ -355,3 +355,52 @@ class BME280Sensor:
         """Close I2C connection"""
         if self.bus:
             self.bus.close()
+
+
+class CPUSensor:
+    """CPU temperature sensor (from /sys/class/thermal)"""
+    
+    THERMAL_ZONE_PATH = "/sys/class/thermal/thermal_zone0/temp"
+    
+    def __init__(self):
+        self.last_valid_temp = None
+        self.last_read_time = 0
+    
+    def connect(self):
+        """CPU sensor doesn't require connection"""
+        return True
+    
+    def read_temperature(self):
+        """Read CPU temperature from thermal zone (in °C)"""
+        try:
+            with open(self.THERMAL_ZONE_PATH, 'r') as f:
+                temp_millidegrees = int(f.read().strip())
+            
+            temperature = temp_millidegrees / 1000.0
+            now = time.time()
+            
+            # Validate temperature
+            if MIN_TEMP <= temperature <= MAX_TEMP:
+                self.last_valid_temp = temperature
+                self.last_read_time = now
+            else:
+                logger.warning(f"CPU temperature out of range: {temperature}°C")
+                temperature = None
+            
+            return temperature
+        
+        except Exception as e:
+            logger.error(f"Failed to read CPU temperature: {e}")
+            return None
+    
+    def is_healthy(self):
+        """Check if sensor is providing valid data"""
+        if self.last_valid_temp is None:
+            return False
+        if time.time() - self.last_read_time > SENSOR_TIMEOUT:
+            return False
+        return True
+    
+    def close(self):
+        """Close CPU sensor (no cleanup needed)"""
+        pass

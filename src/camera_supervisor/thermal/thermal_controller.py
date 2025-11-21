@@ -7,7 +7,7 @@ import json
 import math
 
 from . import config
-from .sensors import SHT31Sensor, BME280Sensor
+from .sensors import SHT31Sensor, BME280Sensor, CPUSensor
 from .controllers import PWMController, GPIOController, PIDController
 
 logger = logging.getLogger(__name__)
@@ -32,7 +32,9 @@ def calculate_dew_point(temperature_c, humidity_percent):
 class ThermalController:
     """Main thermal control system"""
 
-    def __init__(self, cpu_fan_gpio=None, cpu_fan_threshold=config.CPU_FAN_THRESHOLD):
+    def __init__(self, cpu_fan_gpio=None, 
+                 cpu_fan_threshold=config.CPU_FAN_THRESHOLD,
+                 body_fan_threshold=config.BODY_FAN_THRESHOLD):
         self.running = False
         self.dome = SHT31Sensor(config.DOME_BUS, config.DOME_ADDR)
         self.body = BME280Sensor(config.BODY_BUS, config.BODY_ADDR)
@@ -41,8 +43,10 @@ class ThermalController:
         self.fan = PWMController(config.PWM_FAN)
         self.cpu_fan = GPIOController(cpu_fan_gpio) if cpu_fan_gpio else None
         self.cpu_fan_threshold = cpu_fan_threshold
+        self.body_fan_threshold = body_fan_threshold
         self.pid = PIDController(config.KP, config.KI, config.KD, config.TARGET_TEMP)
         self.error_count = 0
+        self.cpu_sensor = CPUSensor()
         self.fan_override = None  # Manual fan control override
 
     def get_status(self):
@@ -76,6 +80,9 @@ class ThermalController:
             "cooling_max": config.COOLING_TEMP_MAX,
             "fan_override": self.fan_override,
             "error_count": self.error_count,
+            "cpu_temp": getattr(self, 'last_cpu_temp', None),
+            "cpu_fan_threshold": self.cpu_fan_threshold,
+            "body_fan_threshold": self.body_fan_threshold,
         }
 
     def set_target_temperature(self, temp):
@@ -157,6 +164,10 @@ class ThermalController:
                 # Read ENVI sensor (environment monitoring only)
                 self.envi.read_temperature()
 
+                # Read CPU temperature
+                cpu_temp = self.cpu_sensor.read_temperature()
+                self.last_cpu_temp = cpu_temp
+
                 # Check sensor health
                 if dome_temp is None:
                     self.error_count += 1
@@ -190,16 +201,25 @@ class ThermalController:
                     self.fan.set_duty_cycle(fan_pwm)
                     self.last_fan_pwm = fan_pwm
 
-                    # Control CPU fan (on/off based on threshold)
+                    # Control CPU fan (on/off based on EITHER cpu_temp OR body_temp threshold)
                     if self.cpu_fan:
-                        cpu_fan_state = body_temp >= self.cpu_fan_threshold
+                        # Turn on if EITHER condition is met
+                        cpu_temp_exceeded = (cpu_temp is not None and cpu_temp >= self.cpu_fan_threshold)
+                        body_temp_exceeded = (body_temp >= self.body_fan_threshold)
+                        cpu_fan_state = cpu_temp_exceeded or body_temp_exceeded
+                        
                         self.cpu_fan.set_state(cpu_fan_state)
                         self.last_cpu_fan_state = cpu_fan_state
+                        
+                        # Log with reason why fan is on
+                        cpu_temp_str = f"{cpu_temp:.2f}°C" if cpu_temp is not None else "N/A"
                         logger.info(
-                            f"BODY: {body_temp:.2f}°C | Fan: {fan_pwm:.1f}% | CPU Fan: {'ON' if cpu_fan_state else 'OFF'}"
+                            f"BODY: {body_temp:.2f}°C | CPU: {cpu_temp_str} | "
+                            f"Fan: {fan_pwm:.1f}% | CPU Fan: {'ON' if cpu_fan_state else 'OFF'}"
                         )
                     else:
-                        logger.info(f"BODY: {body_temp:.2f}°C | Fan: {fan_pwm:.1f}%")
+                        cpu_temp_str = f"{cpu_temp:.2f}°C" if cpu_temp is not None else "N/A"
+                        logger.info(f"BODY: {body_temp:.2f}°C | CPU: {cpu_temp_str} | Fan: {fan_pwm:.1f}%")
                 else:
                     # If BODY fails, set fan to 50% and CPU fan ON for safety
                     self.fan.set_duty_cycle(50)

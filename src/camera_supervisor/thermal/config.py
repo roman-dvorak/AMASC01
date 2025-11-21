@@ -6,7 +6,8 @@ Configuration constants for thermal control system
 TARGET_TEMP = 20.0  # Target temperature for DOME sensor (°C)
 COOLING_TEMP_MIN = 10.0  # Temperature for 0% fan speed
 COOLING_TEMP_MAX = 40.0  # Temperature for 100% fan speed
-CPU_FAN_THRESHOLD = 35.0  # Temperature to turn on CPU fan (°C)
+CPU_FAN_THRESHOLD = 60.0  # CPU temperature to turn on CPU fan (°C)
+BODY_FAN_THRESHOLD = 35.0  # BODY temperature to turn on CPU fan (°C)
 
 # I2C Configuration - Sensor locations
 # DOME - Camera dome with heater (SHT31)

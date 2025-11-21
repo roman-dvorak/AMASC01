@@ -12,11 +12,16 @@ The code is structured as a small Python package (`thermal`) with a simple entry
   - Safety limits enforce a maximum allowed temperature.
 - **BODY cooling (fan + CPU fan)**
   - Main fan speed is controlled by BODY temperature (BME280) using a linear mapping between two configurable thresholds.
-  - Optional CPU fan controlled via GPIO; turns on when BODY temperature exceeds a threshold.
+  - Optional CPU fan controlled via GPIO; turns on when **EITHER** CPU temperature **OR** BODY temperature exceeds their respective thresholds.
+- **CPU temperature monitoring**
+  - Reads CPU temperature from `/sys/class/thermal/thermal_zone0/temp`.
+  - CPU fan controlled independently based on CPU temp threshold.
+  - Both CPU and BODY temperature thresholds can be configured separately.
 - **Environment monitoring (ENVI)**
   - Additional SHT31 sensor (ENVI) for ambient measurements.
 - **Extended telemetry**
   - Temperature and relative humidity from DOME, BODY, and ENVI.
+  - CPU temperature.
   - Pressure from the BODY sensor (BME280).
   - Dew point computed for all three sensor locations.
 - **Robustness & safety**
@@ -30,7 +35,7 @@ The code is structured as a small Python package (`thermal`) with a simple entry
 
 - `thermal/`
   - `config.py` – default configuration values (buses, addresses, PID gains, temperature limits, socket paths).
-  - `sensors.py` – SHT31 and BME280 drivers (temperature, humidity, pressure).
+  - `sensors.py` – SHT31, BME280, and CPUSensor drivers (temperature, humidity, pressure).
   - `controllers.py` – PWM, GPIO, and PID controller classes.
   - `thermal_controller.py` – main control loop that ties sensors and actuators together.
   - `socket_server.py` – Unix domain socket server exposing control/status commands.
@@ -39,6 +44,7 @@ The code is structured as a small Python package (`thermal`) with a simple entry
 - `thermal_control_cli.py` – CLI client for querying status and adjusting runtime parameters.
 - `thermal-control.service` – example `systemd` unit file for the daemon.
 - `install.sh` – helper script to install prerequisites and register the service (optional).
+- `restart.sh` – convenience script to reload and restart the thermal control service.
 - `archive/` – old/legacy versions of the implementation kept for reference; not used by the current system.
 
 All paths below assume this directory is `/home/astrometers/repos/AMASC01/src/camera_supervisor` and that the repository root is `/home/astrometers/repos/AMASC01`.
@@ -47,11 +53,12 @@ All paths below assume this directory is `/home/astrometers/repos/AMASC01/src/ca
 
 ### Sensors
 
-The system currently uses three logical sensors, named by physical placement:
+The system currently uses four sensors:
 
 - **DOME** – SHT31 on I2C bus `DOME_BUS`, address `DOME_ADDR`.
 - **BODY** – BME280 on I2C bus `BODY_BUS`, address `BODY_ADDR`.
 - **ENVI** – SHT31 on I2C bus `ENVI_BUS`, address `ENVI_ADDR`.
+- **CPU** – System CPU temperature from `/sys/class/thermal/thermal_zone0/temp`.
 
 The exact bus numbers and addresses are defined in `thermal/config.py` and can be overridden by environment variables at startup via `thermal_control.py`.
 
@@ -73,7 +80,9 @@ PWM and GPIO controllers live in `thermal/controllers.py` and are initialized in
 - Uses a PID controller (`PIDController`) on DOME temperature to compute heater PWM.
 - Uses a linear mapping from BODY temperature to fan PWM between `COOLING_TEMP_MIN` and `COOLING_TEMP_MAX`.
 - Optionally overrides fan speed with a manual value when requested via socket/CLI.
-- Controls the CPU fan on/off based on `CPU_FAN_THRESHOLD` and BODY temperature.
+- Controls the CPU fan on/off based on **EITHER**:
+  - CPU temperature >= `CPU_FAN_THRESHOLD`, **OR**
+  - BODY temperature >= `BODY_FAN_THRESHOLD`
 - Writes a status JSON file at `STATUS_PATH` (by default `/var/run/thermal-control-status.json`).
 
 If the DOME sensor fails repeatedly (more than `MAX_CONSECUTIVE_ERRORS` times in a row), the controller performs a **safe shutdown**: heater off, fans set to a safe state, and the loop exits.
@@ -95,7 +104,8 @@ Key parameters:
 - `TARGET_TEMP` – target DOME temperature (°C) for PID control.
 - `COOLING_TEMP_MIN` – BODY temperature (°C) at which fan is 0%.
 - `COOLING_TEMP_MAX` – BODY temperature (°C) at which fan is 100%.
-- `CPU_FAN_THRESHOLD` – BODY temperature (°C) above which the CPU fan is turned on.
+- `CPU_FAN_THRESHOLD` – CPU temperature (°C) above which the CPU fan is turned on (default: 60°C).
+- `BODY_FAN_THRESHOLD` – BODY temperature (°C) above which the CPU fan is turned on (default: 35°C).
 - `MAX_TEMP` / `MIN_TEMP` – valid sensor range and safety limit.
 - `MAX_CONSECUTIVE_ERRORS` – number of failed DOME reads before shutdown.
 - `SENSOR_TIMEOUT` – maximum age of a sensor reading before it is considered stale.
@@ -109,7 +119,8 @@ Environment="TARGET_TEMP=40"
 Environment="COOLING_MIN=30"
 Environment="COOLING_MAX=70"
 Environment="CPU_FAN_GPIO=518"
-Environment="CPU_FAN_THRESHOLD=35"
+Environment="CPU_FAN_THRESHOLD=60"
+Environment="BODY_FAN_THRESHOLD=35"
 ```
 
 ## Systemd Service
@@ -147,6 +158,19 @@ To install or update the service manually:
    journalctl -u thermal-control.service
    ```
 
+### Quick Restart
+
+Use the provided convenience script to reload and restart the service:
+
+```bash
+./restart.sh
+```
+
+This script performs:
+- `systemctl daemon-reload`
+- `systemctl restart thermal-control.service`
+- Displays service status and recent logs
+
 ## CLI Usage
 
 The CLI tool communicates with the running daemon via the Unix socket at `SOCKET_PATH`.
@@ -159,13 +183,11 @@ Basic usage:
 
 This prints a summary including:
 
-- DOME/BODY/ENVI temperatures and humidities.
-- Dew points for all locations.
-- BODY pressure.
-- Heater and fan PWM values.
-- CPU fan state.
-- Target temperature and cooling range.
-- Error count and fan mode (AUTO or MANUAL override).
+- **DOME section:** Temperature, humidity, dew point, heater PWM.
+- **BODY section:** Temperature, humidity, dew point, pressure, cooling fan PWM and mode (AUTO/MANUAL).
+- **CPU section:** CPU temperature and CPU fan state (ON/OFF).
+- **ENVI section:** Environment temperature, humidity, dew point.
+- **Control Parameters:** Target temperature, cooling range, CPU fan threshold, BODY fan threshold, error count.
 
 Other useful commands:
 
@@ -209,7 +231,7 @@ If you add `--from-file` to `status`, the CLI will read the status directly from
 
 Logging is configured in `thermal_control.py`:
 
-- **Console/journal:** INFO and higher – telemetry suitable for live monitoring.
+- **Console/journal:** INFO and higher – telemetry suitable for live monitoring (includes CPU temperature in logs).
 - **Log file (`/var/log/thermal_control.log`):** WARNING and higher – only start/stop events and errors, to minimize SD card writes.
 
 Make sure the log path is writable by the user running the service (typically `root` under `systemd`).
@@ -218,6 +240,5 @@ Make sure the log path is writable by the user running the service (typically `r
 
 - Python 3 is required.
 - The code uses `smbus2` for I2C access.
-- When modifying the module layout or configuration, keep `thermal_control.py`, `thermal/control_config.py`, and `thermal-control.service` consistent (paths, environment variables, and import names).
+- When modifying the module layout or configuration, keep `thermal_control.py`, `thermal/config.py`, and `thermal-control.service` consistent (paths, environment variables, and import names).
 - Old/broken implementations are kept in `archive/` and are not imported anywhere; they can be safely ignored for day-to-day development.
-

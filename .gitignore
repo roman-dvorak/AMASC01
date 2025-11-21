@@ -37,3 +37,5 @@ Thumbs.db
 
 # Project-specific
 /home/astrometers/repos/AMASC01/src/camera_supervisor/__pycache__/
+*.backup
+*.old
