@@ -21,17 +21,15 @@ Additional firmware and support tools may be added under `src/` in the future as
 
 ## Camera supervisor
 
-The `camera_supervisor` component is designed to run on the AMASC01 control electronics. It:
+For detailed documentation, installation and `systemd` integration, see [src/camera_supervisor/README.md](src/camera_supervisor/README.md)
 
-- Reads temperature, humidity and pressure from internal sensors.
-- Monitors CPU temperature and controls cooling fans based on configurable thresholds.
-- Controls the heater and fans (including an optional CPU fan) using PID and linear fan control.
-- Computes dew point for multiple sensor locations to better protect the optical dome from fogging.
-- Exposes a Unix domain socket API and a small CLI (`thermal_control_cli.py`) for status and runtime configuration.
+### Quick status check
 
-For detailed documentation, installation and `systemd` integration, see:
+```bash
+./src/camera_supervisor/thermal_control_cli.py status
+```
 
-- `src/camera_supervisor/README.md`
+![Thermal Control Status](doc/thermal_control_status.png)
 
 ## AllSky modules
 
