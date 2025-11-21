@@ -175,7 +175,11 @@ This script performs:
 
 The CLI tool communicates with the running daemon via the Unix socket at `SOCKET_PATH`.
 
-Basic usage:
+### Status Output Example
+
+![Thermal Control Status](../../doc/thermal_control_status.png)
+
+### Basic usage:
 
 ```bash
 ./thermal_control_cli.py status
