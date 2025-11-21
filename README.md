@@ -11,6 +11,12 @@ firmware/software development and customization of the camera.
   optical dome (DOME/BODY/ENVI sensors) to maintain safe operating temperatures and helps prevent fogging and
   condensation during long-term outdoor operation.
 
+- `src/allsky_modules/` (submodule)  
+  AllSky modules and plugins specifically developed for AMASC01. These extend the [AllSky](https://github.com/AllskyTeam/allsky) 
+  software with AMASC01-specific functionality such as thermal status overlays on captured images.
+  
+  The submodule tracks the `AMASC01` branch from [roman-dvorak/allsky-modules](https://github.com/roman-dvorak/allsky-modules/tree/AMASC01).
+
 Additional firmware and support tools may be added under `src/` in the future as the platform evolves.
 
 ## Camera supervisor
@@ -18,6 +24,7 @@ Additional firmware and support tools may be added under `src/` in the future as
 The `camera_supervisor` component is designed to run on the AMASC01 control electronics. It:
 
 - Reads temperature, humidity and pressure from internal sensors.
+- Monitors CPU temperature and controls cooling fans based on configurable thresholds.
 - Controls the heater and fans (including an optional CPU fan) using PID and linear fan control.
 - Computes dew point for multiple sensor locations to better protect the optical dome from fogging.
 - Exposes a Unix domain socket API and a small CLI (`thermal_control_cli.py`) for status and runtime configuration.
@@ -26,10 +33,17 @@ For detailed documentation, installation and `systemd` integration, see:
 
 - `src/camera_supervisor/README.md`
 
-## Development
+## AllSky modules
 
-- The code is written in Python 3.
-- Hardware access relies on I2C (via `smbus2`), PWM and GPIO interfaces provided by the AMASC01 platform.
-- Contributions and local customizations should follow the existing layout under `src/` and keep
-  `camera_supervisor` self-contained.
+The AMASC01-specific AllSky modules provide integration with the AllSky camera software:
 
+- **allsky_amasc01_thermalstatus** – Reads thermal control status and overlays sensor data on captured images
+- Additional modules for monitoring, control, and data export
+
+To initialize the submodule after cloning:
+
+```bash
+git submodule update --init --recursive
+```
+
+For more information about AllSky modules, see the [allsky-modules repository](https://github.com/roman-dvorak/allsky-modules/tree/AMASC01).
