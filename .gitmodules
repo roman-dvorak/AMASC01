@@ -1,0 +1,4 @@
+[submodule "src/allsky_modules"]
+	path = src/allsky_modules
+	url = https://github.com/roman-dvorak/allsky-modules.git
+	branch = AMASC01
