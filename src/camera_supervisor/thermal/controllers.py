@@ -110,8 +110,9 @@ class GPIOController:
 class PWMController:
     """Control PWM outputs via sysfs"""
     
-    def __init__(self, channel):
+    def __init__(self, channel, inverted=False):
         self.channel = channel
+        self.inverted = inverted
         self.base_path = Path(f"/sys/class/pwm/pwmchip0")
         self.pwm_path = self.base_path / f"pwm{channel}"
         self.enabled = False
@@ -130,7 +131,8 @@ class PWMController:
                 f.write("20000000")  # 20ms in nanoseconds
             
             self.enabled = True
-            logger.info(f"PWM{self.channel} initialized successfully")
+            inverted_str = " (inverted)" if self.inverted else ""
+            logger.info(f"PWM{self.channel} initialized successfully{inverted_str}")
             return True
         except Exception as e:
             logger.error(f"Failed to setup PWM{self.channel}: {e}")
@@ -143,7 +145,14 @@ class PWMController:
         
         try:
             percent = max(0.0, min(100.0, percent))
-            duty_ns = int(20000000 * percent / 100.0)
+            
+            # Apply inversion if configured
+            if self.inverted:
+                actual_percent = 100.0 - percent
+            else:
+                actual_percent = percent
+                
+            duty_ns = int(20000000 * actual_percent / 100.0)
             
             with open(self.pwm_path / "duty_cycle", "w") as f:
                 f.write(str(duty_ns))
@@ -220,5 +229,4 @@ class PIDController:
         self.integral = 0.0
         self.last_error = 0.0
         self.last_time = time.time()
-
 

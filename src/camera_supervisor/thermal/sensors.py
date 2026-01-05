@@ -7,6 +7,7 @@ import math
 
 try:
     import smbus2
+    from smbus2 import i2c_msg
 except ImportError:
     smbus2 = None
 
@@ -404,3 +405,176 @@ class CPUSensor:
     def close(self):
         """Close CPU sensor (no cleanup needed)"""
         pass
+
+
+class SHT40Sensor:
+    """SHT40 temperature and humidity sensor
+
+    The SHT40 is an improved version of SHT3x with better accuracy and lower power consumption.
+    """
+
+    def __init__(self, bus_num, address=0x44):
+        self.bus_num = bus_num
+        self.address = address
+        self.bus = None
+        self.last_valid_temp = None
+        self.last_read_time = 0
+        self.last_valid_humidity = None
+        self.last_humidity_time = 0
+
+    def connect(self):
+        """Connect to I2C bus"""
+        try:
+            self.bus = smbus2.SMBus(self.bus_num)
+            logger.info(f"Connected to SHT40 on bus {self.bus_num}")
+            logger.info(f"SHT40 I2C address: 0x{self.address:02x}")
+            return True
+        except Exception as e:
+            logger.error(f"Failed to connect to SHT40: {e}")
+            return False
+
+    def _read_temperature_and_humidity(self):
+        """Perform a single measurement and return (temperature, humidity).
+
+        SHT40 measurement command: 0xFD (high precision)
+        """
+        # 1) Send measurement command (samostatná write transakce)
+        try:
+            write = i2c_msg.write(self.address, [0xFD])
+            self.bus.i2c_rdwr(write)
+        except Exception as e:
+            logger.error(f"SHT40 write failed on bus {self.bus_num}, addr 0x{self.address:02x}: {e}")
+            raise
+
+        # 2) Počkat na konverzi (dejme 20 ms rezervu)
+        time.sleep(0.02)
+
+        # 3) Čistý read 6 bytů (bez command byte)
+        try:
+            read = i2c_msg.read(self.address, 6)
+            self.bus.i2c_rdwr(read)
+            data = list(read)
+        except Exception as e:
+            logger.error(f"SHT40 read failed on bus {self.bus_num}, addr 0x{self.address:02x}: {e}")
+            raise
+
+        if len(data) != 6:
+            raise ValueError(f"SHT40 returned {len(data)} bytes instead of 6: {data}")
+
+        # (volitelně – CRC check, můžeš přidat později)
+
+        # Extract temperature: bytes 0-1
+        temp_raw = (data[0] << 8) | data[1]
+        temperature = -45.0 + (175.0 * temp_raw / 65535.0)
+
+        # Extract humidity: bytes 3-4 (skip checksum at index 2)
+        hum_raw = (data[3] << 8) | data[4]
+        humidity = -6.0 + (125.0 * hum_raw / 65535.0)
+        humidity = max(0.0, min(100.0, humidity))
+
+        return temperature, humidity
+
+
+    def XX_read_temperature_and_humidity(self):
+        """Perform a single measurement and return (temperature, humidity).
+        
+        SHT40 measurement command: 0xFD (high precision)
+        """
+
+        self.bus.write_byte(self.address, 0xFD)
+        time.sleep(0.02)  # 20 ms, ať máme rezervu
+        data = self.bus.read_i2c_block_data(self.address, 0x00, 6)
+
+
+        # Send measurement command (precision high, no heater)
+        #self.bus.write_i2c_block_data(self.address, 0xFD, [])
+        # Wait for measurement to complete (max 10ms for high precision)
+        #time.sleep(0.01)
+
+        # Read 6 bytes of data (2 for temp + checksum, 2 for humidity + checksum)
+        #data = self.bus.read_i2c_block_data(self.address, 0x00, 6)
+
+        # Extract temperature: bytes 0-1
+        temp_raw = (data[0] << 8) | data[1]
+        # SHT40 temperature conversion: T = -45 + 175 * (RAW / 65535)
+        temperature = -45.0 + (175.0 * temp_raw / 65535.0)
+
+        # Extract humidity: bytes 3-4 (skip checksum at index 2)
+        hum_raw = (data[3] << 8) | data[4]
+        # SHT40 humidity conversion: RH = -6 + 125 * (RAW / 65535)
+        humidity = -6.0 + (125.0 * hum_raw / 65535.0)
+        # Clamp to [0, 100]
+        humidity = max(0.0, min(100.0, humidity))
+
+        return temperature, humidity
+
+    def read_temperature(self):
+        """Read temperature from SHT40.
+
+        Also refreshes the stored humidity value from the same measurement.
+        """
+        try:
+            temperature, humidity = self._read_temperature_and_humidity()
+
+            now = time.time()
+
+            # Validate temperature
+            if MIN_TEMP <= temperature <= MAX_TEMP:
+                self.last_valid_temp = temperature
+                self.last_read_time = now
+            else:
+                logger.warning(f"SHT40 temperature out of range: {temperature}°C")
+                temperature = None
+
+            # Always try to update humidity
+            if 0.0 <= humidity <= 100.0:
+                self.last_valid_humidity = humidity
+                self.last_humidity_time = now
+            else:
+                logger.warning(f"SHT40 humidity out of range: {humidity}%")
+
+            return temperature
+
+        except Exception as e:
+            logger.error(f"Failed to read SHT40: {e}")
+            return None
+
+    def read_humidity(self):
+        """Read relative humidity from SHT40.
+
+        This performs a fresh measurement; the temperature value is also
+        updated internally, but only humidity is returned.
+        """
+        try:
+            temperature, humidity = self._read_temperature_and_humidity()
+            now = time.time()
+
+            # Update cached values
+            if MIN_TEMP <= temperature <= MAX_TEMP:
+                self.last_valid_temp = temperature
+                self.last_read_time = now
+
+            if 0.0 <= humidity <= 100.0:
+                self.last_valid_humidity = humidity
+                self.last_humidity_time = now
+                return humidity
+            else:
+                logger.warning(f"SHT40 humidity out of range: {humidity}%")
+                return None
+
+        except Exception as e:
+            logger.error(f"Failed to read SHT40 humidity: {e}")
+            return None
+
+    def is_healthy(self):
+        """Check if sensor is providing valid data (temperature based)."""
+        if self.last_valid_temp is None:
+            return False
+        if time.time() - self.last_read_time > SENSOR_TIMEOUT:
+            return False
+        return True
+
+    def close(self):
+        """Close I2C connection"""
+        if self.bus:
+            self.bus.close()

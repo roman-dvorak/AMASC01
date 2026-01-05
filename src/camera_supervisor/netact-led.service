@@ -1,0 +1,11 @@
+[Unit]
+Description=Configure net activity LED on GPIO27 (netact)
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+ExecStart=/bin/sh -c 'LED=/sys/class/leds/netact; IFACE=eth0; modprobe ledtrig-netdev || exit 1; for i in $(seq 1 20); do [ -d "$LED" ] && break; sleep 0.2; done; [ -d "$LED" ] || { echo "ERROR: $LED not found"; exit 1; }; echo netdev > "$LED/trigger"; echo "$IFACE" > "$LED/device_name"; echo 1 > "$LED/link"; echo 1 > "$LED/rx"; echo 1 > "$LED/tx";'
+
+[Install]
+WantedBy=multi-user.target
