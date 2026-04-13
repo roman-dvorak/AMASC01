@@ -1,0 +1,77 @@
+{
+    "fields": [
+        {
+            "label": "${DATE}  ${TIME}",
+            "x": 260,
+            "y": 46,
+            "id": "oe-field-0",
+            "format": "{%d-%m-%Y}{%H:%M:%S}",
+            "strokewidth": 0,
+            "sample": "DATE,TIME",
+            "tlx": 20,
+            "tly": 16,
+            "fill": "#ff0000",
+            "fontsize": 60
+        },
+        {
+            "label": "Exposure: ${sEXPOSURE}",
+            "x": 309,
+            "y": 98,
+            "id": "oe-field-1",
+            "fontsize": 48,
+            "strokewidth": 0,
+            "tlx": 20,
+            "tly": 74
+        },
+        {
+            "label": "Gain: ${GAIN}",
+            "x": 172,
+            "y": 158,
+            "id": "oe-field-2",
+            "format": "{:.2f}",
+            "fontsize": 48,
+            "strokewidth": 0,
+            "tlx": 20,
+            "tly": 134
+        },
+        {
+            "label": "Dome: ${AMASC01_DOME_TEMP}",
+            "x": 436,
+            "y": 426,
+            "id": "oe-field-4",
+            "format": "{:.2f}",
+            "strokewidth": 0,
+            "sample": "",
+            "tlx": 19,
+            "tly": 400,
+            "type": "number"
+        }
+    ],
+    "images": [],
+    "settings": {
+        "defaultdatafileexpiry": "550",
+        "defaultincludeplanets": false,
+        "defaultincludesun": false,
+        "defaultincludemoon": false,
+        "defaultimagetopacity": 0.63,
+        "defaultimagerotation": 0,
+        "defaulttextrotation": 0,
+        "defaultfontopacity": 1,
+        "defaultfontcolour": "white",
+        "defaultfont": "Arial",
+        "defaultfontsize": 52,
+        "defaultimagescale": 1,
+        "defaultnoradids": ""
+    },
+    "fonts": [],
+    "metadata": {
+        "name": "Allsky",
+        "description": "",
+        "camerabrand": "RPi",
+        "cameramodel": "",
+        "cameraresolutionwidth": "4056",
+        "cameraresolutionheight": "3040",
+        "tod": "both"
+    },
+    "rects": []
+}

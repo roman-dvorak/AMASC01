@@ -246,3 +246,12 @@ Make sure the log path is writable by the user running the service (typically `r
 - The code uses `smbus2` for I2C access.
 - When modifying the module layout or configuration, keep `thermal_control.py`, `thermal/config.py`, and `thermal-control.service` consistent (paths, environment variables, and import names).
 - Old/broken implementations are kept in `archive/` and are not imported anywhere; they can be safely ignored for day-to-day development.
+
+
+
+## RTC
+
+```
+  sudo hwclock -w   # zapíše aktuální systémový čas do RTC
+  sudo hwclock -r   # přečte čas z RTC
+```

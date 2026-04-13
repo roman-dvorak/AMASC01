@@ -1,0 +1,20 @@
+[Unit]
+Description=Reverse SSH tunnel to astrometers
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+ExecStart=/usr/bin/ssh -N \
+  -i /root/.ssh/tunnel_key \
+  -o ServerAliveInterval=30 \
+  -o ServerAliveCountMax=3 \
+  -o ExitOnForwardFailure=yes \
+  -o StrictHostKeyChecking=yes \
+  -R 127.0.0.1:34541:localhost:22 \
+  tunnel@tunnel.astrometers.eu
+
+Restart=always
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target
