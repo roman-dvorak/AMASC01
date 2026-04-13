@@ -28,7 +28,7 @@ jq '
   daymaxautoexposure: 5000,
   dayexposure: 10,
   daymean: 0.5,
-  daymeanthreshold: 0.1,
+  daymeanthreshold: 0.15,
   daydelay: 85000,
   dayautogain: true,
   daymaxautogain: 8,
@@ -86,8 +86,9 @@ jq '
   usedarkframes: false,
   locale: "en_GB.UTF-8",
   debuglevel: 1,
-  imageremovebadlow: 0.1,
-  imageremovebadhigh: 0.9,
+  imageremovebadlow: 0,
+  imageremovebadhigh: 0,
+
   imageremovebadcount: 5,
 
   imagecreatethumbnails: true,
@@ -175,8 +176,9 @@ jq '
   uselogin: true,
   webuidatafiles: "",
 
-  daytimeoverlay: "overlay3-RPi_HQ-4056x3040-both.json",
-  nighttimeoverlay: "overlay3-RPi_HQ-4056x3040-both.json",
+  daytimeoverlay: "overlay-AMASC01-both.json",
+  nighttimeoverlay: "overlay-AMASC01-both.json",
+
 
   enabledatabase: true,
   databasetype: "sqlite",
@@ -194,6 +196,18 @@ jq -e . "$tmp" >/dev/null
 
 # atomický zápis
 mv "$tmp" "$CFG"
+
+# === kopírování overlay ===
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+OVERLAY_SRC="$SCRIPT_DIR/overlay-AMASC01-both.json"
+OVERLAY_DST="$HOME/allsky/config/overlay/config/overlay-AMASC01-both.json"
+
+if [[ -f "$OVERLAY_SRC" ]]; then
+  cp "$OVERLAY_SRC" "$OVERLAY_DST"
+  echo "OK: overlay-AMASC01-both.json zkopírován do overlay/config/"
+else
+  echo "WARN: $OVERLAY_SRC nenalezen, overlay nebyl zkopírován"
+fi
 
 # nastavení práv
 chmod 664 "$CFG"

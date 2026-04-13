@@ -2,11 +2,14 @@
 set -euo pipefail
 
 CFG="$HOME/allsky/html/allsky/configuration.json"
+REMOTE_CFG="$HOME/allsky/config/remote_configuration.json"
+
 
 if ! command -v jq >/dev/null 2>&1; then
   echo "ERROR: jq není nainstalované. Nainstaluj: sudo apt-get update && sudo apt-get install -y jq"
   exit 1
 fi
+
 
 if [[ ! -f "$CFG" ]]; then
   echo "ERROR: Soubor neexistuje: $CFG"
@@ -21,6 +24,7 @@ cp -a "$CFG" "$CFG.bak.$(date +%Y%m%d_%H%M%S)"
 
 # Definice polí - přepíšeme leftSidebar a popoutIcons podle "tvé" konfigurace,
 # ale popout pak hromadně vypneme.
+
 read -r -d '' LEFT_SIDEBAR_JSON <<'JSON' || true
 [
   {
@@ -100,6 +104,7 @@ read -r -d '' LEFT_SIDEBAR_JSON <<'JSON' || true
   }
 ]
 JSON
+
 
 read -r -d '' POPOUT_ICONS_JSON <<'JSON' || true
 [
@@ -237,3 +242,70 @@ mv "$tmp" "$CFG"
 chmod 664 "$CFG"
 echo "OK: Upraveno: $CFG"
 echo "Záloha: $(ls -1t "$CFG".bak.* | head -n 1)"
+
+# Funkce pro úpravu jednoho konfiguračního souboru
+update_config() {
+  local cfg="$1"
+
+  if [[ ! -f "$cfg" ]]; then
+    echo "WARN: Soubor neexistuje, přeskakuji: $cfg"
+    return 0
+  fi
+
+  # Ověření validního JSON
+  jq -e . "$cfg" >/dev/null
+
+  # Záloha
+  cp -a "$cfg" "$cfg.bak.$(date +%Y%m%d_%H%M%S)"
+
+  local tmp
+  tmp="$(mktemp)"
+
+  jq \
+    --argjson leftSidebar "$LEFT_SIDEBAR_JSON" \
+    '
+    # --- config.* (obecné AstroMeters AMASC01) ---
+    .config.location          = "AstroMeters"
+  | .config.latitude          = "50N"
+  | .config.longitude         = "15E"
+  | .config.camera            = "AMASC01"
+  | .config.lens              = "FishEye"
+  | .config.computer          = "RPi 4"
+  | .config.equipmentinfo     = "AstroMeters All-sky camera AMASC01"
+  | .config.owner             = "AstroMeters"
+
+    # Overlay parametry (podle tvé config)
+  | .config.overlayWidth      = 660
+  | .config.overlayHeight     = 660
+  | .config.overlayOffsetLeft = 120
+  | .config.overlayOffsetTop  = 0
+  | .config.az                = 200
+  | .config.imageWidth        = 900
+  | .config.opacity           = 0.5
+  | .config.live              = true
+  | .config.id                = "starmap"
+  | .config.AllskyVersion     = "AMASC01-2025"
+  | .config.elevation         = 405
+
+    # --- homePage.* ---
+  | .homePage.title                = "Astrometers AMASC01 - ALLSKY camera"
+  | .homePage.og_description       = "Astrometers AMASC01 - ALLSKY camera"
+  | .homePage.includeLinkToMakeOwn = false
+  | .homePage.og_url               = "https://astrometers.eu/products/AMASC01"
+
+    # --- menu/ikony ---
+  | .homePage.leftSidebar = $leftSidebar
+  | .homePage.popoutIcons = []
+    ' \
+    "$cfg" > "$tmp"
+
+  jq -e . "$tmp" >/dev/null
+  mv "$tmp" "$cfg"
+  chmod 664 "$cfg"
+  echo "OK: Upraveno: $cfg"
+  echo "Záloha: $(ls -1t "$cfg".bak.* | head -n 1)"
+}
+
+update_config "$CFG"
+update_config "$REMOTE_CFG"
+
