@@ -26,8 +26,8 @@ ENVI_ADDR = 0x44
 ENVI_TYPE = 'SHT40'
 
 # PWM Configuration
-PWM_HEATER = 0  # PWM0 for DOME heating
-PWM_FAN = 1     # PWM1 for BODY fan
+PWM_HEATER = 1  # PWM0 for DOME heating
+PWM_FAN = 0     # PWM1 for BODY fan
 PWM_HEATER_INVERTED = False  # If True, 100% = OFF, 0% = ON
 PWM_FAN_INVERTED = False     # If True, 100% = OFF, 0% = ON
 

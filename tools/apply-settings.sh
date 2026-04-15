@@ -88,6 +88,7 @@ jq '
   debuglevel: 1,
   imageremovebadlow: 0,
   imageremovebadhigh: 0,
+
   imageremovebadcount: 5,
 
   imagecreatethumbnails: true,
@@ -178,6 +179,7 @@ jq '
   daytimeoverlay: "overlay-AMASC01-both.json",
   nighttimeoverlay: "overlay-AMASC01-both.json",
 
+
   enabledatabase: true,
   databasetype: "sqlite",
   cameratype: "RPi",
@@ -195,7 +197,6 @@ jq -e . "$tmp" >/dev/null
 # atomický zápis
 mv "$tmp" "$CFG"
 
-
 # === kopírování overlay ===
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 OVERLAY_SRC="$SCRIPT_DIR/overlay-AMASC01-both.json"
@@ -207,6 +208,7 @@ if [[ -f "$OVERLAY_SRC" ]]; then
 else
   echo "WARN: $OVERLAY_SRC nenalezen, overlay nebyl zkopírován"
 fi
+
 # nastavení práv
 chmod 664 "$CFG"
 

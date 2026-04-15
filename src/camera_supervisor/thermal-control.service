@@ -14,8 +14,8 @@ Environment="TARGET_TEMP=20"
 Environment="COOLING_MIN=30"
 Environment="COOLING_MAX=70"
 Environment="CPU_FAN_GPIO=518"
-Environment="CPU_FAN_THRESHOLD=50"
-Environment="BODY_FAN_THRESHOLD=40"
+Environment="CPU_FAN_THRESHOLD=45"
+Environment="BODY_FAN_THRESHOLD=35"
 
 ExecStart=/usr/bin/python3 /home/astrometers/repos/AMASC01/src/camera_supervisor/thermal_control.py
 
