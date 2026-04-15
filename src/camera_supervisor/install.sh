@@ -43,6 +43,9 @@ fi
 cat >> "$CONFIG_FILE" << 'EOF'
 
 # CAMERA_SUPERVISOR START
+dtparam=i2c_arm=on
+dtoverlay=i2c-rtc,pcf8563,addr=0x51
+
 dtoverlay=gpio-led,gpio=22,label=sdact,trigger=mmc0,active_low=0
 dtoverlay=gpio-led,gpio=27,label=netact,active_low=0
 dtoverlay=pwm,pin=12,func=4,pin2=13,func2=4
