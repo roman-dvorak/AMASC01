@@ -10,7 +10,7 @@ ExecStart=/usr/bin/ssh -N \
   -o ServerAliveCountMax=3 \
   -o ExitOnForwardFailure=yes \
   -o StrictHostKeyChecking=yes \
-  -R 127.0.0.1:2541:localhost:22 \
+  -R 127.0.0.1:{{PORT}}:localhost:22 \
   tunnel@tunnel.astrometers.eu
 
 Restart=always
