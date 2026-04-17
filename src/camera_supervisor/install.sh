@@ -54,6 +54,23 @@ EOF
 
 
 #############################################
+
+#############################################
+# Create hardware configuration .env file
+#############################################
+HW_ENV_FILE="/amasc01.env"
+if [ ! -f "$HW_ENV_FILE" ]; then
+    echo "Creating hardware configuration file: $HW_ENV_FILE"
+    cat > "$HW_ENV_FILE" << 'ENVEOF'
+# AstroMeters hardware configuration
+# Board variant: AMRPI4HAT01A, AMRPI4HAT01B, AMRPI4HAT01C, AMRPI4HAT01D
+# AMRPI4HAT01D: PWM channels for heater and fan are swapped
+BOARD_VARIANT=AMRPI4HAT01A
+ENVEOF
+else
+    echo "Hardware configuration file already exists: $HW_ENV_FILE"
+fi
+
 # Install Python dependencies
 #############################################
 echo "Installing Python dependencies..."

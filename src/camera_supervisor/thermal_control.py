@@ -168,6 +168,14 @@ def main():
     config.TARGET_TEMP = args.target_temp
     config.COOLING_TEMP_MIN = args.cooling_min
     config.COOLING_TEMP_MAX = args.cooling_max
+
+    # Apply hardware-specific overrides based on board variant
+    board_variant = os.getenv("BOARD_VARIANT", "").upper()
+    if board_variant:
+        logger.info(f"Board variant: {board_variant}")
+    if board_variant == "AMRPI4HAT01D":
+        config.PWM_HEATER, config.PWM_FAN = config.PWM_FAN, config.PWM_HEATER
+        logger.info(f"AMRPI4HAT01D: PWM channels swapped (heater={config.PWM_HEATER}, fan={config.PWM_FAN})")
     
     logger.info("=== AllSky Camera Thermal Control System ===")
     logger.info(f"Target temperature: {config.TARGET_TEMP}°C")

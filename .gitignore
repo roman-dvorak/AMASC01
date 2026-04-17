@@ -40,3 +40,6 @@ Thumbs.db
 *.backup
 *.old
 systemd/reverse-ssh.service
+
+# Hardware configuration (machine-specific)
+.env
