@@ -70,7 +70,11 @@ def cmd_status(args):
     print(f"  Temperature:    {fmt(status.get('dome_temp'))}°C")
     print(f"  Humidity:       {fmt(status.get('dome_humidity'))}%")
     print(f"  Dew Point:      {fmt(status.get('dome_dew_point'))}°C")
-    print(f"  Heater PWM:     {status.get('heater_pwm', 0):.1f}%")
+    print(f"  Heater PWM:     {status.get('heater_pwm', 0):.1f}%", end="")
+    if status.get('heater_override') is not None:
+        print(f" (MANUAL: {fmt(status['heater_override'])}%)")
+    else:
+        print(" (AUTO)")
     
     # BODY Section
     print("\n[BODY - Camera Body with Fan]")
@@ -129,6 +133,24 @@ def cmd_set_cooling(args):
         print(f"Error: {response['error']}")
     else:
         print(f"Cooling range set to {response['cooling_min']}°C - {response['cooling_max']}°C")
+
+
+def cmd_heater_override(args):
+    """Override heater power"""
+    response = send_command({"command": "heater-override", "percent": args.percent})
+    if "error" in response:
+        print(f"Error: {response['error']}")
+    else:
+        print(f"Heater manually set to {response['heater_override']}%")
+
+
+def cmd_heater_auto(args):
+    """Return heater to automatic control"""
+    response = send_command({"command": "heater-auto"})
+    if "error" in response:
+        print(f"Error: {response['error']}")
+    else:
+        print("Heater returned to automatic control")
 
 
 def cmd_fan_override(args):
@@ -190,6 +212,15 @@ def main():
     cooling_parser.add_argument('--min', type=float, help='Minimum temperature for 0% fan')
     cooling_parser.add_argument('--max', type=float, help='Maximum temperature for 100% fan')
     cooling_parser.set_defaults(func=cmd_set_cooling)
+
+    # Heater override
+    heater_override_parser = subparsers.add_parser('heater-override', help='Manually set heater power')
+    heater_override_parser.add_argument('percent', type=float, help='Heater power percentage (0-100)')
+    heater_override_parser.set_defaults(func=cmd_heater_override)
+
+    # Heater auto
+    heater_auto_parser = subparsers.add_parser('heater-auto', help='Return heater to automatic control')
+    heater_auto_parser.set_defaults(func=cmd_heater_auto)
 
     # Fan override
     fan_override_parser = subparsers.add_parser('fan-override', help='Manually set fan speed')

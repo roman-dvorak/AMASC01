@@ -115,6 +115,17 @@ class SocketServer:
             self.controller.fan_override = percent
             return {"success": True, "fan_override": percent}
         
+        elif cmd_type == 'heater-override':
+            percent = command.get('percent')
+            if percent is None or percent < 0 or percent > 100:
+                return {"error": "Invalid heater percent (0-100)"}
+            self.controller.heater_override = percent
+            return {"success": True, "heater_override": percent}
+        
+        elif cmd_type == 'heater-auto':
+            self.controller.heater_override = None
+            return {"success": True, "heater_mode": "auto"}
+
         elif cmd_type == 'fan-auto':
             self.controller.fan_override = None
             return {"success": True, "fan_mode": "auto"}

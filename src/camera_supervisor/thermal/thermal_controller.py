@@ -65,6 +65,7 @@ class ThermalController:
         self.error_count = 0
         self.cpu_sensor = CPUSensor()
         self.fan_override = None  # Manual fan control override
+        self.heater_override = None  # Manual heater control override
         
         # Failsafe state tracking
         self.failsafe_mode = False
@@ -129,6 +130,7 @@ class ThermalController:
             "cooling_min": config.COOLING_TEMP_MIN,
             "cooling_max": config.COOLING_TEMP_MAX,
             "fan_override": self.fan_override,
+            "heater_override": self.heater_override,
             "error_count": self.error_count,
             "cpu_temp": getattr(self, 'last_cpu_temp', None),
             "cpu_fan_threshold": self.cpu_fan_threshold,
@@ -271,15 +273,22 @@ class ThermalController:
                     # In failsafe, outputs already set
                     pass
                 elif dome_temp is not None:
-                    heater_pwm = self.pid.update(dome_temp)
+                    if self.heater_override is not None:
+                        heater_pwm = self.heater_override
+                    else:
+                        heater_pwm = self.pid.update(dome_temp)
                     self.heater.set_duty_cycle(heater_pwm)
                     self.last_heater_pwm = heater_pwm
                     logger.info(f"DOME: {dome_temp:.2f}°C | Heater: {heater_pwm:.1f}%")
                 else:
-                    # If DOME sensor unavailable, use failsafe heater value
-                    self.heater.set_duty_cycle(config.FAILSAFE_HEATER_PWM)
-                    self.last_heater_pwm = config.FAILSAFE_HEATER_PWM
-                    logger.warning(f"Heater set to failsafe {config.FAILSAFE_HEATER_PWM}% (DOME unavailable)")
+                    # If DOME sensor unavailable, use override or failsafe heater value
+                    if self.heater_override is not None:
+                        heater_pwm = self.heater_override
+                    else:
+                        heater_pwm = config.FAILSAFE_HEATER_PWM
+                    self.heater.set_duty_cycle(heater_pwm)
+                    self.last_heater_pwm = heater_pwm
+                    logger.warning(f"Heater set to {heater_pwm:.1f}% (DOME unavailable)")
 
                 # Control cooling based on BODY
                 if self.failsafe_mode:
