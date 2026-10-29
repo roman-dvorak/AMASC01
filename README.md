@@ -17,6 +17,9 @@ firmware/software development and customization of the camera.
   
   The submodule tracks the `AMASC01` branch from [roman-dvorak/allsky-modules](https://github.com/roman-dvorak/allsky-modules/tree/AMASC01).
 
+- `release/`  
+  Release packaging and installer for the camera, see [release/README.md](release/README.md).
+
 Additional firmware and support tools may be added under `src/` in the future as the platform evolves.
 
 ## Camera supervisor
@@ -29,12 +32,13 @@ For detailed documentation, installation and `systemd` integration, see [src/cam
 curl -fsSL https://github.com/roman-dvorak/AMASC01/releases/latest/download/install.sh | sudo bash
 ```
 
-See [release/README.md](release/README.md) for details (creating releases, options, rollback).
+See [release/README.md](release/README.md) for details (creating releases, options, installation report, rollback).
 
 ### Quick status check
 
 ```bash
-./src/camera_supervisor/thermal_control_cli.py status
+thermal-control-cli status                              # installed from release
+./src/camera_supervisor/thermal_control_cli.py status   # from git checkout
 ```
 
 ![Thermal Control Status](doc/thermal_control_status.png)

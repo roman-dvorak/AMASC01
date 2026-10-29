@@ -43,11 +43,16 @@ The code is structured as a small Python package (`thermal`) with a simple entry
 - `thermal_control.py` – main entrypoint script used by the `systemd` service.
 - `thermal_control_cli.py` – CLI client for querying status and adjusting runtime parameters.
 - `thermal-control.service` – example `systemd` unit file for the daemon.
-- `install.sh` – helper script to install prerequisites and register the service (optional).
+- `install.sh` – installs prerequisites and registers the services directly from this git checkout (development).
+- `config.txt.fragment` – device tree overlays added to `/boot/firmware/config.txt`.
+- `amasc01.env.example` – default `/amasc01.env` (machine-specific config, e.g. `BOARD_VARIANT`).
 - `restart.sh` – convenience script to reload and restart the thermal control service.
 - `archive/` – old/legacy versions of the implementation kept for reference; not used by the current system.
 
-All paths below assume this directory is `/home/astrometers/repos/AMASC01/src/camera_supervisor` and that the repository root is `/home/astrometers/repos/AMASC01`.
+For production installation use the GitHub release installer, see [release/README.md](../../release/README.md);
+it installs into `/opt/amasc01/current/camera_supervisor` and the CLI as `thermal-control-cli`.
+
+All paths below (git checkout installation) assume this directory is `/home/astrometers/repos/AMASC01/src/camera_supervisor` and that the repository root is `/home/astrometers/repos/AMASC01`.
 
 ## Runtime Architecture
 
