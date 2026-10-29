@@ -23,6 +23,14 @@ Additional firmware and support tools may be added under `src/` in the future as
 
 For detailed documentation, installation and `systemd` integration, see [src/camera_supervisor/README.md](src/camera_supervisor/README.md)
 
+### Installation from GitHub release
+
+```bash
+curl -fsSL https://github.com/roman-dvorak/AMASC01/releases/latest/download/get.sh | sudo bash
+```
+
+See [release/README.md](release/README.md) for details (creating releases, options, rollback).
+
 ### Quick status check
 
 ```bash

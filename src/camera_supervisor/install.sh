@@ -40,17 +40,12 @@ else
 fi
 
 # Přidej nový blok na konec
-cat >> "$CONFIG_FILE" << 'EOF'
-
-# CAMERA_SUPERVISOR START
-dtparam=i2c_arm=on
-dtoverlay=i2c-rtc,pcf8563,addr=0x51
-
-dtoverlay=gpio-led,gpio=22,label=sdact,trigger=mmc0,active_low=0
-dtoverlay=gpio-led,gpio=27,label=netact,active_low=0
-dtoverlay=pwm-2chan,pin=12,func=4,pin2=13,func2=4
-# CAMERA_SUPERVISOR END
-EOF
+{
+    echo ""
+    echo "# CAMERA_SUPERVISOR START"
+    cat "${SCRIPT_DIR}/config.txt.fragment"
+    echo "# CAMERA_SUPERVISOR END"
+} >> "$CONFIG_FILE"
 
 
 #############################################
@@ -61,12 +56,7 @@ EOF
 HW_ENV_FILE="/amasc01.env"
 if [ ! -f "$HW_ENV_FILE" ]; then
     echo "Creating hardware configuration file: $HW_ENV_FILE"
-    cat > "$HW_ENV_FILE" << 'ENVEOF'
-# AstroMeters hardware configuration
-# Board variant: AMRPI4HAT01A, AMRPI4HAT01B, AMRPI4HAT01C, AMRPI4HAT01D
-# AMRPI4HAT01D: PWM channels for heater and fan are swapped
-BOARD_VARIANT=AMRPI4HAT01A
-ENVEOF
+    cp "${SCRIPT_DIR}/amasc01.env.example" "$HW_ENV_FILE"
 else
     echo "Hardware configuration file already exists: $HW_ENV_FILE"
 fi
