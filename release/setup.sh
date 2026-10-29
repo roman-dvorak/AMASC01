@@ -12,7 +12,6 @@
 #
 # Options:
 #   -h, --help           show this help
-#   --with-reverse-ssh   also install reverse-ssh.service (keeps existing port)
 #   --no-restart         do not (re)start services
 #   --keep N             number of releases to keep (default 3)
 #   --report[=FILE]      print installation report (hostname, serial, MAC addresses,
@@ -30,14 +29,12 @@ CLI_LINK="/usr/local/bin/thermal-control-cli"
 UNIT_DIR="/etc/systemd/system"
 UNITS=(thermal-control.service netact-led.service)
 
-WITH_REVERSE_SSH=0
 RESTART=1
 KEEP=3
 REPORT_FILE=""
 
 while [ $# -gt 0 ]; do
     case "$1" in
-        --with-reverse-ssh) WITH_REVERSE_SSH=1; shift ;;
         --no-restart) RESTART=0; shift ;;
         --keep) KEEP="${2:?--keep needs a value}"; shift 2 ;;
         --report) REPORT_FILE="default"; shift ;;
@@ -134,18 +131,6 @@ for unit in "${UNITS[@]}"; do
     install_unit "$unit" "$TARGET/systemd/$unit"
 done
 
-if [ "$WITH_REVERSE_SSH" -eq 1 ]; then
-    # Keep the already assigned port, the tunnel server config depends on it
-    PORT="$(grep -oP '127\.0\.0\.1:\K[0-9]+' "$UNIT_DIR/reverse-ssh.service" 2>/dev/null || true)"
-    PORT="${PORT:-$(shuf -i 10000-65000 -n 1)}"
-    sed "s/{{PORT}}/$PORT/g" "$TARGET/systemd/reverse-ssh.service.template" > "$TARGET/systemd/reverse-ssh.service"
-    install_unit reverse-ssh.service "$TARGET/systemd/reverse-ssh.service"
-    UNITS+=(reverse-ssh.service)
-    if [ ! -f /root/.ssh/tunnel_key ]; then
-        echo "WARNING: /root/.ssh/tunnel_key missing, see systemd/README.md"
-    fi
-fi
-
 systemctl daemon-reload
 systemctl enable "${UNITS[@]}"
 
@@ -188,7 +173,7 @@ fi
 # Installation report
 #############################################
 write_report() {
-    local iface mac state ips port
+    local iface mac state ips
     echo "AMASC01 installation report"
     echo "==========================="
     echo "Date:          $(date -Is)"
@@ -213,16 +198,11 @@ write_report() {
     done
     echo ""
     echo "Services:"
-    for unit in thermal-control.service netact-led.service reverse-ssh.service; do
+    for unit in "${UNITS[@]}"; do
         printf '  %-26s enabled=%-9s active=%s\n' "$unit" \
             "$(systemctl is-enabled "$unit" 2>/dev/null || true)" \
             "$(systemctl is-active "$unit" 2>/dev/null || true)"
     done
-    port="$(grep -oP '127\.0\.0\.1:\K[0-9]+' "$UNIT_DIR/reverse-ssh.service" 2>/dev/null || true)"
-    if [ -n "$port" ]; then
-        echo ""
-        echo "Reverse SSH:   port $port, key $( [ -f /root/.ssh/tunnel_key.pub ] && cut -d' ' -f1-2 /root/.ssh/tunnel_key.pub || echo missing)"
-    fi
 }
 
 if [ -n "$REPORT_FILE" ]; then

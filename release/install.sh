@@ -4,7 +4,7 @@
 # Latest release:
 #   curl -fsSL https://github.com/roman-dvorak/AMASC01/releases/latest/download/install.sh | sudo bash
 # Specific version / extra options (passed to setup.sh):
-#   curl -fsSL https://github.com/roman-dvorak/AMASC01/releases/latest/download/install.sh | sudo bash -s -- --version v1.2.0 --with-reverse-ssh
+#   curl -fsSL https://github.com/roman-dvorak/AMASC01/releases/latest/download/install.sh | sudo bash -s -- --version v1.2.0
 set -euo pipefail
 
 REPO="${AMASC01_REPO:-roman-dvorak/AMASC01}"
@@ -22,7 +22,6 @@ Options:
   --version TAG        release to install (default: latest)
 
 Install options (passed to setup.sh):
-  --with-reverse-ssh   also install reverse-ssh.service (keeps existing port)
   --no-restart         do not (re)start services
   --keep N             number of releases to keep (default 3)
   --report[=FILE]      print installation report (MAC addresses, serial, services, ...)

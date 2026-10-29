@@ -1,7 +1,7 @@
 # Release & installation
 
 Release package contains `camera_supervisor` (thermal control daemon + CLI) and the systemd units
-(`thermal-control`, `netact-led`, optionally `reverse-ssh`).
+(`thermal-control`, `netact-led`).
 
 ## Creating a release
 
@@ -27,10 +27,10 @@ Latest release:
 curl -fsSL https://github.com/roman-dvorak/AMASC01/releases/latest/download/install.sh | sudo bash
 ```
 
-Specific version, including the reverse SSH tunnel:
+Specific version:
 
 ```bash
-curl -fsSL https://github.com/roman-dvorak/AMASC01/releases/latest/download/install.sh | sudo bash -s -- --version v1.2.0 --with-reverse-ssh
+curl -fsSL https://github.com/roman-dvorak/AMASC01/releases/latest/download/install.sh | sudo bash -s -- --version v1.2.0
 ```
 
 Show help without installing anything:
@@ -46,7 +46,6 @@ curl -fsSL https://github.com/roman-dvorak/AMASC01/releases/latest/download/inst
 | Option | Description |
 |---|---|
 | `--version TAG` | release to install (`install.sh` only, default: latest) |
-| `--with-reverse-ssh` | also install `reverse-ssh.service` (keeps already assigned port, see [systemd/README.md](../systemd/README.md)) |
 | `--no-restart` | do not (re)start services |
 | `--keep N` | number of releases kept in `/opt/amasc01/releases` (default 3) |
 | `--report[=FILE]` | print and save installation report (see below) |
@@ -78,9 +77,6 @@ Network interfaces:
 Services:
   thermal-control.service    enabled=enabled   active=active
   netact-led.service         enabled=enabled   active=active
-  reverse-ssh.service        enabled=enabled   active=active
-
-Reverse SSH:   port 48685, key ssh-ed25519 AAAA...
 ```
 
 ### What the installer does
@@ -108,7 +104,6 @@ Steps:
   (`TARGET_TEMP`, `COOLING_MIN`, …) there; values in it override `Environment=` in the unit
 - installs units into `/etc/systemd/system` (replaces old units created by `systemctl link` from a git checkout),
   enables and restarts them
-- `reverse-ssh`: keeps the already assigned port on upgrade
 - links CLI as `thermal-control-cli`
 
 ### Rollback

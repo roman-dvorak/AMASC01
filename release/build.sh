@@ -52,7 +52,6 @@ fi
 sed "s|$DEV_PATH|$APP_DIR/camera_supervisor|g" "$SRC/thermal-control.service" \
     > "$PKG/systemd/thermal-control.service"
 cp "$SRC/netact-led.service" "$PKG/systemd/"
-cp "$REPO_ROOT/systemd/reverse-ssh.service.template" "$PKG/systemd/"
 
 #############################################
 # Installer + metadata
