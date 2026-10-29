@@ -26,7 +26,7 @@ For detailed documentation, installation and `systemd` integration, see [src/cam
 ### Installation from GitHub release
 
 ```bash
-curl -fsSL https://github.com/roman-dvorak/AMASC01/releases/latest/download/get.sh | sudo bash
+curl -fsSL https://github.com/roman-dvorak/AMASC01/releases/latest/download/install.sh | sudo bash
 ```
 
 See [release/README.md](release/README.md) for details (creating releases, options, rollback).

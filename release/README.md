@@ -13,7 +13,7 @@ Release package contains `camera_supervisor` (thermal control daemon + CLI) and 
 
 2. The [Release workflow](../.github/workflows/release.yml) builds and attaches to the release:
    - `amasc01-v1.2.0.tar.gz` + `.sha256`
-   - `get.sh` – download & install bootstrap
+   - `install.sh` – downloads the release and runs `setup.sh` from it
 
    Assets for an existing tag can be rebuilt via *Actions → Release → Run workflow*.
 
@@ -24,16 +24,16 @@ Local build (for testing): `release/build.sh v1.2.0-dev dist`
 Latest release:
 
 ```bash
-curl -fsSL https://github.com/roman-dvorak/AMASC01/releases/latest/download/get.sh | sudo bash
+curl -fsSL https://github.com/roman-dvorak/AMASC01/releases/latest/download/install.sh | sudo bash
 ```
 
 Specific version, including the reverse SSH tunnel:
 
 ```bash
-curl -fsSL https://github.com/roman-dvorak/AMASC01/releases/latest/download/get.sh | sudo bash -s -- --version v1.2.0 --with-reverse-ssh
+curl -fsSL https://github.com/roman-dvorak/AMASC01/releases/latest/download/install.sh | sudo bash -s -- --version v1.2.0 --with-reverse-ssh
 ```
 
-`install.sh` options: `--with-reverse-ssh`, `--no-restart`, `--keep N` (number of kept releases, default 3).
+`setup.sh` options (also accepted by `install.sh`): `--with-reverse-ssh`, `--no-restart`, `--keep N` (number of kept releases, default 3).
 
 ### What the installer does
 
@@ -51,5 +51,5 @@ curl -fsSL https://github.com/roman-dvorak/AMASC01/releases/latest/download/get.
 
 ```bash
 ls /opt/amasc01/releases
-sudo /opt/amasc01/releases/<version>/install.sh
+sudo /opt/amasc01/releases/<version>/setup.sh
 ```

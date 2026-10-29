@@ -8,7 +8,7 @@
 # Produces:
 #   <output_dir>/amasc01-<version>.tar.gz
 #   <output_dir>/amasc01-<version>.tar.gz.sha256
-#   <output_dir>/get.sh
+#   <output_dir>/install.sh
 set -euo pipefail
 
 usage() { sed -n '2,/^set -/s/^# \{0,1\}//p' "$0"; }
@@ -57,8 +57,8 @@ cp "$REPO_ROOT/systemd/reverse-ssh.service.template" "$PKG/systemd/"
 #############################################
 # Installer + metadata
 #############################################
-cp "$REPO_ROOT/release/install.sh" "$PKG/install.sh"
-chmod 755 "$PKG/install.sh"
+cp "$REPO_ROOT/release/setup.sh" "$PKG/setup.sh"
+chmod 755 "$PKG/setup.sh"
 echo "$VERSION" > "$PKG/VERSION"
 git -C "$REPO_ROOT" rev-parse HEAD > "$PKG/COMMIT" 2>/dev/null || true
 
@@ -67,9 +67,9 @@ git -C "$REPO_ROOT" rev-parse HEAD > "$PKG/COMMIT" 2>/dev/null || true
 #############################################
 tar -C "$STAGE" --owner=0 --group=0 -czf "$OUT_DIR/$NAME.tar.gz" "$NAME"
 (cd "$OUT_DIR" && sha256sum "$NAME.tar.gz" > "$NAME.tar.gz.sha256")
-cp "$REPO_ROOT/release/get.sh" "$OUT_DIR/get.sh"
+cp "$REPO_ROOT/release/install.sh" "$OUT_DIR/install.sh"
 
 echo "Built:"
 echo "  $OUT_DIR/$NAME.tar.gz"
 echo "  $OUT_DIR/$NAME.tar.gz.sha256"
-echo "  $OUT_DIR/get.sh"
+echo "  $OUT_DIR/install.sh"
