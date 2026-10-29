@@ -15,6 +15,9 @@
 #   --with-reverse-ssh   also install reverse-ssh.service (keeps existing port)
 #   --no-restart         do not (re)start services
 #   --keep N             number of releases to keep (default 3)
+#   --report[=FILE]      print installation report (hostname, serial, MAC addresses,
+#                        services, ...) and save it to FILE
+#                        (default /opt/amasc01/reports/install-<host>-<time>.txt)
 #
 # Rollback: sudo /opt/amasc01/releases/<old_version>/setup.sh
 set -euo pipefail
@@ -30,12 +33,15 @@ UNITS=(thermal-control.service netact-led.service)
 WITH_REVERSE_SSH=0
 RESTART=1
 KEEP=3
+REPORT_FILE=""
 
 while [ $# -gt 0 ]; do
     case "$1" in
         --with-reverse-ssh) WITH_REVERSE_SSH=1; shift ;;
         --no-restart) RESTART=0; shift ;;
         --keep) KEEP="${2:?--keep needs a value}"; shift 2 ;;
+        --report) REPORT_FILE="default"; shift ;;
+        --report=*) REPORT_FILE="${1#--report=}"; shift ;;
         -h|--help) sed -n '2,/^set -/s/^# \{0,1\}//p' "$0"; exit 0 ;;
         *) echo "Unknown option: $1" >&2; exit 1 ;;
     esac
@@ -176,4 +182,56 @@ echo "  CLI:      thermal-control-cli status"
 if [ "$REBOOT_NEEDED" -eq 1 ]; then
     echo ""
     echo "!!! $CONFIG_FILE changed - reboot required (backup: $CONFIG_FILE.amasc01.bak)"
+fi
+
+#############################################
+# Installation report
+#############################################
+write_report() {
+    local iface mac state ips port
+    echo "AMASC01 installation report"
+    echo "==========================="
+    echo "Date:          $(date -Is)"
+    echo "Hostname:      $(hostname)"
+    echo "Model:         $(tr -d '\0' 2>/dev/null < /proc/device-tree/model || echo unknown)"
+    echo "Serial:        $(tr -d '\0' 2>/dev/null < /proc/device-tree/serial-number || echo unknown)"
+    echo "OS:            $(grep -oP '^PRETTY_NAME="?\K[^"]*' /etc/os-release 2>/dev/null || echo unknown)"
+    echo "Kernel:        $(uname -r) ($(uname -m))"
+    echo "Release:       $VERSION ($(cat "$TARGET/COMMIT" 2>/dev/null || echo unknown))"
+    echo "Board variant: $(grep -oP '^BOARD_VARIANT=\K.*' "$HW_ENV_FILE" 2>/dev/null || echo unset)"
+    echo "Reboot needed: $([ "$REBOOT_NEEDED" -eq 1 ] && echo yes || echo no)"
+    echo ""
+    echo "Network interfaces:"
+    printf '  %-12s %-19s %-8s %s\n' INTERFACE MAC STATE IPv4
+    for iface in /sys/class/net/*; do
+        iface="$(basename "$iface")"
+        [ "$iface" = "lo" ] && continue
+        mac="$(cat "/sys/class/net/$iface/address" 2>/dev/null || echo -)"
+        state="$(cat "/sys/class/net/$iface/operstate" 2>/dev/null || echo -)"
+        ips="$(ip -4 -o addr show dev "$iface" 2>/dev/null | awk '{print $4}' | paste -sd, -)"
+        printf '  %-12s %-19s %-8s %s\n' "$iface" "$mac" "$state" "${ips:--}"
+    done
+    echo ""
+    echo "Services:"
+    for unit in thermal-control.service netact-led.service reverse-ssh.service; do
+        printf '  %-26s enabled=%-9s active=%s\n' "$unit" \
+            "$(systemctl is-enabled "$unit" 2>/dev/null || true)" \
+            "$(systemctl is-active "$unit" 2>/dev/null || true)"
+    done
+    port="$(grep -oP '127\.0\.0\.1:\K[0-9]+' "$UNIT_DIR/reverse-ssh.service" 2>/dev/null || true)"
+    if [ -n "$port" ]; then
+        echo ""
+        echo "Reverse SSH:   port $port, key $( [ -f /root/.ssh/tunnel_key.pub ] && cut -d' ' -f1-2 /root/.ssh/tunnel_key.pub || echo missing)"
+    fi
+}
+
+if [ -n "$REPORT_FILE" ]; then
+    if [ "$REPORT_FILE" = "default" ]; then
+        REPORT_FILE="$PREFIX/reports/install-$(hostname)-$(date +%Y%m%d-%H%M%S).txt"
+    fi
+    mkdir -p "$(dirname "$REPORT_FILE")"
+    echo ""
+    write_report | tee "$REPORT_FILE"
+    echo ""
+    echo "Report saved to $REPORT_FILE"
 fi

@@ -25,6 +25,8 @@ Install options (passed to setup.sh):
   --with-reverse-ssh   also install reverse-ssh.service (keeps existing port)
   --no-restart         do not (re)start services
   --keep N             number of releases to keep (default 3)
+  --report[=FILE]      print installation report (MAC addresses, serial, services, ...)
+                       and save it (default /opt/amasc01/reports/)
 
 Example:
   curl -fsSL https://github.com/$REPO/releases/latest/download/install.sh | sudo bash -s -- --help

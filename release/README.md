@@ -33,7 +33,9 @@ Specific version, including the reverse SSH tunnel:
 curl -fsSL https://github.com/roman-dvorak/AMASC01/releases/latest/download/install.sh | sudo bash -s -- --version v1.2.0 --with-reverse-ssh
 ```
 
-`setup.sh` options (also accepted by `install.sh`): `--with-reverse-ssh`, `--no-restart`, `--keep N` (number of kept releases, default 3).
+`setup.sh` options (also accepted by `install.sh`): `--with-reverse-ssh`, `--no-restart`, `--keep N` (number of kept releases, default 3),
+`--report[=FILE]` (installation report: hostname, model, serial, OS, release, board variant, MAC/IPv4 of all interfaces,
+service states, reverse SSH port and key; saved to `/opt/amasc01/reports/` by default).
 
 ### What the installer does
 
